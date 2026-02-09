@@ -1,0 +1,362 @@
+/***********************************************************************/ /**
+   \file   n2k.ino
+   \brief  NMEA2000 to signalk over zenoh
+
+
+   
+   This base file is a bidirectional NMEA2000 to signalk over zenoh
+
+   Does not fullfill all NMEA2000 requirements.
+ */
+
+ #define NODENAME "n2k"
+// #define N2k_SPI_CS_PIN 53    // If you use mcp_can and CS pin is not 53, uncomment this and modify definition to match your CS pin.
+// #define N2k_CAN_INT_PIN 21   // If you use mcp_can and interrupt pin is not 21, uncomment this and modify definition to match your interrupt pin.
+// #define USE_MCP_CAN_CLOCK_SET 8  // If you use mcp_can and your mcp_can shield has 8MHz chrystal, uncomment this.
+#define ESP32_CAN_TX_PIN GPIO_NUM_21 // If you use ESP32 and do not have TX on default IO 16, uncomment this and and modify definition to match your CAN TX pin.
+#define ESP32_CAN_RX_PIN GPIO_NUM_20 // If you use ESP32 and do not have RX on default IO 4, uncomment this and and modify definition to match your CAN RX pin.
+
+#define LED_BLUE 8 // blue LED pin
+
+#include <n2k.h>
+
+
+// modbus
+HardwareSerial modSerial(1);
+
+NMEA2000Node nmea2000Node;
+
+// Define schedulers for messages. They are declared in base but keep local reference for clarity.
+tN2kSyncScheduler n2kScheduler(false, 100, 500);
+
+// *****************************************************************************
+// Call back for NMEA2000 open. This will be called, when library starts bus communication.
+// See NMEA2000.SetOnOpen(OnN2kOpen); on setup()
+
+
+void OnN2kOpen()
+{
+  // Start schedulers now.
+  n2kScheduler.UpdateNextTime();
+}
+
+
+//*****************************************************************************
+void handleHeading(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  tN2kHeadingReference ref;
+  double deviation = 0;
+  double variation;
+  double heading;
+
+  if ( ParseN2kHeading(N2kMsg, SID, heading, deviation, variation, ref) ) {
+    webServerNode.setSensorData("navigation.headingTrue", heading + variation + deviation);    
+    //setup values for zenoh
+    readings["navigation"]["headingTrue"] = heading + variation + deviation;
+  
+  }
+}
+
+
+//*****************************************************************************
+void handleBoatSpeed(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  double waterReferenced;
+  double groundReferenced;
+  tN2kSpeedWaterReferenceType SWRT;
+
+  if ( ParseN2kBoatSpeed(N2kMsg, SID, waterReferenced, groundReferenced, SWRT) ) {
+    webServerNode.setSensorData("navigation.speedThroughWater", waterReferenced);
+    webServerNode.setSensorData("navigation.speedOverGround", groundReferenced);    
+    //setup values for zenoh
+    readings["navigation"]["speedThroughWater"] = waterReferenced;
+    readings["navigation"]["speedOverGround"] = groundReferenced;
+  }
+}
+
+
+//*****************************************************************************
+void handleDepth(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  double depthBelowTransducer;
+  double offset;
+  double range;
+  double waterDepth;
+
+  if ( ParseN2kWaterDepth(N2kMsg, SID, depthBelowTransducer, offset, range) ) {
+    waterDepth = depthBelowTransducer + offset;
+    webServerNode.setSensorData("environment.depth.belowTransducer", depthBelowTransducer);
+    webServerNode.setSensorData("environment.depth.belowSurface", waterDepth);    
+    //setup values for zenoh
+    readings["environment"]["depth"]["belowTransducer"] = depthBelowTransducer;
+    readings["environment"]["depth"]["belowSurface"] = waterDepth;
+  }
+}
+
+
+//*****************************************************************************
+void handlePosition(const tN2kMsg &N2kMsg) {
+  double latitude;
+  double longitude;
+  char buf[100];
+
+  if ( ParseN2kPGN129025(N2kMsg, latitude, longitude) ) {
+    //snprintf(buf, sizeof(buf), "{\"altitude\":%f,\"latitude\":%f,\"longitude\":%f}", 0.0 , latitude, longitude);
+    webServerNode.setSensorData("navigation.position.altitude", 0.0);
+    webServerNode.setSensorData("navigation.position.latitude", latitude);
+    webServerNode.setSensorData("navigation.position.longitude", longitude);  
+    //setup values for zenoh
+    readings["navigation"]["position"]["altitude"] = 0.0; 
+    readings["navigation"]["position"]["latitude"] = latitude;
+    readings["navigation"]["position"]["longitude"] = longitude;
+  }
+}
+
+
+//*****************************************************************************
+void handleCOG_SOG(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  tN2kHeadingReference ref;
+  double COG;
+  double SOG;
+
+  if ( ParseN2kPGN129026(N2kMsg, SID, ref, COG, SOG) ) {
+    webServerNode.setSensorData("navigation.courseOverGroundTrue", COG);
+    webServerNode.setSensorData("navigation.speedOverGround", SOG);    
+    //setup values for zenoh
+    readings["navigation"]["courseOverGroundTrue"] = COG; 
+    readings["navigation"]["speedOverGround"] = SOG;
+  }
+}
+
+
+//*****************************************************************************
+void handleWind(const tN2kMsg &N2kMsg) {
+  unsigned char SID;
+  tN2kWindReference windReference;
+
+  double windAngle, windSpeed;
+
+  if ( ParseN2kWindSpeed(N2kMsg, SID, windSpeed, windAngle, windReference) ) {
+    if ( windReference == N2kWind_Apparent ) {
+      webServerNode.setSensorData("environment.wind.angleApparent", windAngle);
+      webServerNode.setSensorData("environment.wind.speedApparent", windSpeed);    
+      //setup values for zenoh
+      readings["environment"]["wind"]["angleApparent"] = windAngle;
+      readings["environment"]["wind"]["speedApparent"] = windSpeed;  
+      
+    }
+    else if ( windReference == N2kWind_True_boat ) {
+      webServerNode.setSensorData("environment.wind.angleTrueGround", windAngle);
+      webServerNode.setSensorData("environment.wind.speedTrue", windSpeed);     
+      //setup values for zenoh
+      readings["environment"]["wind"]["angleTrueGround"] = windAngle;
+      readings["environment"]["wind"]["speedTrue"] = windSpeed; 
+    }
+    else if ( windReference == N2kWind_True_water ) {
+     webServerNode.setSensorData("environment.wind.angleTrueWater", windAngle);
+     webServerNode.setSensorData("environment.wind.speedTrue", windSpeed);      
+      //setup values for zenoh
+      readings["environment"]["wind"]["angleTrueWater"] = windAngle;
+      readings["environment"]["wind"]["speedTrue"] = windSpeed;
+    }
+  }
+}
+
+
+//*****************************************************************************
+void handleLog(const tN2kMsg & N2kMsg) {
+
+  uint16_t daysSince1970;
+  double secondsSinceMidnight;
+  uint32_t log;
+  uint32_t triplog;
+
+  if ( ParseN2kDistanceLog(N2kMsg, daysSince1970, secondsSinceMidnight, log, triplog) ) {
+    webServerNode.setSensorData("navigation.trip.log", (int)triplog);
+    webServerNode.setSensorData("navigation.log", (int)log);
+    //setup values for zenoh
+    readings["navigation"]["trip"]["log"] = triplog; 
+    readings["navigation"]["log"] = log;
+  }
+}
+
+
+//*****************************************************************************
+void handleWaterTemp(const tN2kMsg & N2kMsg) {
+
+  unsigned char SID;
+  double outsideAmbientAirTemperature;
+  double atmosphericPressure;
+  double waterTemperature;
+
+  if ( ParseN2kPGN130310(N2kMsg, SID, waterTemperature, outsideAmbientAirTemperature, atmosphericPressure) ) {
+    webServerNode.setSensorData("environment.outside.temperature", outsideAmbientAirTemperature);
+    webServerNode.setSensorData("environment.outside.pressure", atmosphericPressure);
+    webServerNode.setSensorData("environment.water.temperature", waterTemperature);    
+    //setup values for zenoh
+    readings["environment"]["water"]["temperature"] = waterTemperature;
+    readings["environment"]["outside"]["temperature"] = outsideAmbientAirTemperature;
+    readings["environment"]["outside"]["pressure"] = atmosphericPressure;
+  }
+  
+}
+
+
+//*****************************************************************************
+void handleRudder(const tN2kMsg & N2kMsg) {
+
+  double rudderPosition;
+  unsigned char instance;
+  tN2kRudderDirectionOrder rudderDirectionOrder;
+  double angleOrder;
+
+  if ( ParseN2kRudder(N2kMsg, rudderPosition, instance, rudderDirectionOrder, angleOrder) ) {
+    webServerNode.setSensorData("steering.rudderAngle", rudderPosition);   
+    //setup values for zenoh
+    readings["steering"]["rudderAngle"] = rudderPosition; 
+  }
+}
+
+
+//*****************************************************************************
+void handleGNSS(const tN2kMsg & N2kMsg) {
+
+  unsigned char SID;
+  uint16_t daysSince1970;
+  double secondsSinceMidnight;
+  double latitude;
+  double longitude;
+  double altitude;
+  tN2kGNSStype GNSStype;
+  tN2kGNSSmethod GNSSmethod;
+  unsigned char nSatellites;
+  double HDOP;
+  double PDOP;
+  double geoidalSeparation;
+  unsigned char nReferenceStations;
+  tN2kGNSStype referenceStationType;
+  uint16_t referenceSationID;
+  double ageOfCorrection;
+  char buf[100];
+
+  if ( ParseN2kGNSS(N2kMsg, SID, daysSince1970, secondsSinceMidnight, latitude, longitude, altitude, GNSStype, GNSSmethod,
+                    nSatellites, HDOP, PDOP, geoidalSeparation,
+                    nReferenceStations, referenceStationType, referenceSationID, ageOfCorrection) ) {
+    
+    webServerNode.setSensorData("navigation.gnss.type", GNSStype);
+    webServerNode.setSensorData("navigation.gnss.horizontalDilution", HDOP);
+    webServerNode.setSensorData("navigation.gnss.positionDilution", PDOP);
+
+    //setup values for zenoh
+    readings["navigation"]["gnss"]["type"] = GNSStype; 
+    readings["navigation"]["gnss"]["horizontalDilution"] = HDOP; 
+    readings["navigation"]["gnss"]["positionDilution"] = PDOP; 
+    
+    webServerNode.setSensorData("navigation.gnss.satellites", nSatellites);
+    webServerNode.setSensorData("navigation.gnss.geoidalSeparation", geoidalSeparation);
+    webServerNode.setSensorData("navigation.gnss.differentialAge", ageOfCorrection);
+
+    //setup values for zenoh
+    readings["navigation"]["gnss"]["satellites"] = nSatellites; 
+    readings["navigation"]["gnss"]["geoidalSeparation"] = geoidalSeparation; 
+    readings["navigation"]["gnss"]["differentialAge"] = ageOfCorrection; 
+    
+    webServerNode.setSensorData("navigation.gnss.differentialReference", referenceSationID);
+    //snprintf(buf, sizeof(buf), "{\"altitude\":%f,\"latitude\":%f,\"longitude\":%f}", altitude , latitude, longitude);
+    webServerNode.setSensorData("navigation.position.altitude", 0.0);
+    webServerNode.setSensorData("navigation.position.latitude", latitude);
+    webServerNode.setSensorData("navigation.position.longitude", longitude);
+    
+    //setup values for zenoh
+    readings["navigation"]["gnss"]["differentialReference"] = referenceSationID; 
+    readings["navigation"]["position"]["altitude"] = altitude; 
+    readings["navigation"]["position"]["latitude"] = latitude; 
+    readings["navigation"]["position"]["longitude"] = longitude; 
+  }
+}
+
+//
+// Largely based on https://github.com/AK-Homberger/NMEA2000-SignalK-Gateway/blob/main/NMEA2000-SignalK-Gateway/NMEA2000-SignalK-Gateway.ino
+// Modified to send zenoh flavour of signalk
+//
+void handleNMEA2000Msg(const tN2kMsg &N2kMsg) {
+
+  switch (N2kMsg.PGN) {
+    case 127250L: handleHeading(N2kMsg);
+    case 128259L: handleBoatSpeed(N2kMsg);
+    case 128267L: handleDepth(N2kMsg);
+    case 129025L: handlePosition(N2kMsg);
+    case 129026L: handleCOG_SOG(N2kMsg);
+    case 129029L: handleGNSS(N2kMsg);
+    case 130306L: handleWind(N2kMsg);
+    case 128275L: handleLog(N2kMsg);
+    case 130310L: handleWaterTemp(N2kMsg);
+    case 127245L: handleRudder(N2kMsg);
+  }
+}
+
+
+
+
+// *****************************************************************************
+void setup()
+{
+  // Initialize base subsystems (WiFi, OTA, WebServer, Zenoh, Syslog)
+  ArduinoOTA.setHostname(NODENAME);
+  syslog.app=NODENAME;
+  baseInit();
+  const long unsigned receiveMessages[] = {
+    127250L, // Heading
+    128259L, // Boat speed
+    128267L, // Depth
+    129025L, // Position
+    129026L, // COG and SOG
+    129029L, // GNSS
+    130306L, // Wind
+    128275L, // log
+    130310L, // Water temperature
+    127245L, // Rudder
+    0
+  };
+  nmea2000Node.setReceiveMessages(receiveMessages);
+  nmea2000Node.setReceiveMsgHandler(handleNMEA2000Msg);
+
+  const long unsigned transmitMessages[] = {
+    127250L, // Heading
+    128259L, // Boat speed
+    128267L, // Depth
+    129025L, // Position
+    129026L, // COG and SOG
+    129029L, // GNSS
+    130306L, // Wind
+    128275L, // log
+    130310L, // Water temperature
+    127245L, // Rudder
+    0
+  };
+  nmea2000Node.setTransmitMessages(transmitMessages);
+  nmea2000Node.init();
+  nmea2000Node.setOnOpen(OnN2kOpen);
+  nmea2000Node.open();
+}
+
+// *****************************************************************************
+void loop()
+{
+
+  if (n2kScheduler.IsTime())
+  {
+    n2kScheduler.UpdateNextTime();
+    //double angleRad = DegToRad(deAverageAwa());
+    //nmea2000Node.sendWind(angleRad, windNode.aws_ms, false);
+    // update base with latest wind so Zenoh and webserver can publish it
+    //SetData(angleRad, windNode.aws_ms);
+  }
+
+  nmea2000Node.parseMessages();
+  nmea2000Node.checkNodeAddress();
+
+  // run base periodic tasks (Zenoh publish, OTA, web updates)
+  baseLoopTasks();
+}
