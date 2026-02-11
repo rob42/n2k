@@ -52,6 +52,8 @@ void handleHeading(const tN2kMsg &N2kMsg) {
   if ( ParseN2kHeading(N2kMsg, SID, heading, deviation, variation, ref) ) {
     webServerNode.setSensorData("navigation.headingTrue", heading + variation + deviation);    
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_HEADINGTRUE,heading + variation + deviation);
+
     readings[KEY_NAVIGATION_HEADINGTRUE] = heading + variation + deviation;
   
   }
@@ -69,6 +71,9 @@ void handleBoatSpeed(const tN2kMsg &N2kMsg) {
     webServerNode.setSensorData("navigation.speedThroughWater", waterReferenced);
     webServerNode.setSensorData("navigation.speedOverGround", groundReferenced);    
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_SPEEDTHROUGHWATER, waterReferenced);
+    zenoh.publish(KEY_NAVIGATION_SPEEDOVERGROUND, groundReferenced);
+
     readings[KEY_NAVIGATION_SPEEDTHROUGHWATER] = waterReferenced;
     readings[KEY_NAVIGATION_SPEEDOVERGROUND] = groundReferenced;
   } 
@@ -88,6 +93,9 @@ void handleDepth(const tN2kMsg &N2kMsg) {
     webServerNode.setSensorData("environment.depth.belowTransducer", depthBelowTransducer);
     webServerNode.setSensorData("environment.depth.belowSurface", waterDepth);    
     //setup values for zenoh
+    zenoh.publish(KEY_ENVIRONMENT_DEPTH_BELOWTRANSDUCER, depthBelowTransducer);
+    zenoh.publish(KEY_ENVIRONMENT_DEPTH_BELOWSURFACE, waterDepth);
+
     readings[KEY_ENVIRONMENT_DEPTH_BELOWTRANSDUCER] = depthBelowTransducer;
     readings[KEY_ENVIRONMENT_DEPTH_BELOWSURFACE] = waterDepth;
   }
@@ -106,6 +114,10 @@ void handlePosition(const tN2kMsg &N2kMsg) {
     webServerNode.setSensorData("navigation.position.latitude", latitude);
     webServerNode.setSensorData("navigation.position.longitude", longitude);  
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_POSITION_ALTITUDE, 0.0); 
+    zenoh.publish(KEY_NAVIGATION_POSITION_LATITUDE, latitude);
+    zenoh.publish(KEY_NAVIGATION_POSITION_LONGITUDE, longitude);
+
     readings[KEY_NAVIGATION_POSITION_ALTITUDE] = 0.0; 
     readings[KEY_NAVIGATION_POSITION_LATITUDE] = latitude;
     readings[KEY_NAVIGATION_POSITION_LONGITUDE] = longitude;
@@ -124,6 +136,9 @@ void handleCOG_SOG(const tN2kMsg &N2kMsg) {
     webServerNode.setSensorData("navigation.courseOverGroundTrue", cog);
     webServerNode.setSensorData("navigation.speedOverGround", sog);    
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_COURSEOVERGROUNDTRUE, cog); 
+    zenoh.publish(KEY_NAVIGATION_SPEEDOVERGROUND, sog);
+
     readings[KEY_NAVIGATION_COURSEOVERGROUNDTRUE] = cog; 
     readings[KEY_NAVIGATION_SPEEDOVERGROUND] = sog;
   }
@@ -142,6 +157,9 @@ void handleWind(const tN2kMsg &N2kMsg) {
       webServerNode.setSensorData("environment.wind.angleApparent", windAngle);
       webServerNode.setSensorData("environment.wind.speedApparent", windSpeed);    
       //setup values for zenoh
+      zenoh.publish(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT, windAngle);
+      zenoh.publish(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT, windSpeed);
+
       readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = windAngle;
       readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = windSpeed;  
       
@@ -150,6 +168,9 @@ void handleWind(const tN2kMsg &N2kMsg) {
       webServerNode.setSensorData("environment.wind.angleTrueGround", windAngle);
       webServerNode.setSensorData("environment.wind.speedTrue", windSpeed);     
       //setup values for zenoh
+      zenoh.publish(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND, windAngle);
+      zenoh.publish(KEY_ENVIRONMENT_WIND_SPEEDTRUE, windSpeed); 
+
       readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND] = windAngle;
       readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = windSpeed; 
     }
@@ -157,6 +178,9 @@ void handleWind(const tN2kMsg &N2kMsg) {
      webServerNode.setSensorData("environment.wind.angleTrueWater", windAngle);
      webServerNode.setSensorData("environment.wind.speedTrue", windSpeed);      
       //setup values for zenoh
+      zenoh.publish(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER, windAngle);
+      zenoh.publish(KEY_ENVIRONMENT_WIND_SPEEDTRUE, windSpeed);
+
       readings[KEY_ENVIRONMENT_WIND_ANGLETRUEWATER] = windAngle;
       readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = windSpeed;
     }
@@ -176,8 +200,11 @@ void handleLog(const tN2kMsg & N2kMsg) {
     webServerNode.setSensorData("navigation.trip.log", (int)triplog);
     webServerNode.setSensorData("navigation.log", (int)log);
     //setup values for zenoh
-    readings[KEY_NAVIGATION_TRIP_LOG] = triplog; 
-    readings[KEY_NAVIGATION_LOG] = log;
+    zenoh.publish(KEY_NAVIGATION_TRIP_LOG, (int)triplog); 
+    zenoh.publish(KEY_NAVIGATION_LOG, (int)log);
+
+    readings[KEY_NAVIGATION_TRIP_LOG] = (int)triplog; 
+    readings[KEY_NAVIGATION_LOG] = (int)log;
   }
 }
 
@@ -195,6 +222,10 @@ void handleWaterTemp(const tN2kMsg & N2kMsg) {
     webServerNode.setSensorData("environment.outside.pressure", atmosphericPressure);
     webServerNode.setSensorData("environment.water.temperature", waterTemperature);    
     //setup values for zenoh
+    zenoh.publish(KEY_ENVIRONMENT_WATER_TEMPERATURE, waterTemperature);
+    zenoh.publish(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE, outsideAmbientAirTemperature);
+    zenoh.publish(KEY_ENVIRONMENT_OUTSIDE_PRESSURE, atmosphericPressure);
+
     readings[KEY_ENVIRONMENT_WATER_TEMPERATURE] = waterTemperature;
     readings[KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE] = outsideAmbientAirTemperature;
     readings[KEY_ENVIRONMENT_OUTSIDE_PRESSURE] = atmosphericPressure;
@@ -214,6 +245,7 @@ void handleRudder(const tN2kMsg & N2kMsg) {
   if ( ParseN2kRudder(N2kMsg, rudderPosition, instance, rudderDirectionOrder, angleOrder) ) {
     webServerNode.setSensorData("steering.rudderAngle", rudderPosition);   
     //setup values for zenoh
+    zenoh.publish(KEY_STEERING_RUDDERANGLE,rudderPosition);
     readings[KEY_STEERING_RUDDERANGLE] = rudderPosition; 
   }
 }
@@ -249,6 +281,10 @@ void handleGNSS(const tN2kMsg & N2kMsg) {
     webServerNode.setSensorData("navigation.gnss.positionDilution", PDOP);
 
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_GNSS_TYPE, GNSStype); 
+    zenoh.publish(KEY_NAVIGATION_GNSS_HORIZONTALDILUTION, HDOP); 
+    zenoh.publish(KEY_NAVIGATION_GNSS_POSITIONDILUTION, PDOP); 
+
     readings[KEY_NAVIGATION_GNSS_TYPE] = GNSStype; 
     readings[KEY_NAVIGATION_GNSS_HORIZONTALDILUTION] = HDOP; 
     readings[KEY_NAVIGATION_GNSS_POSITIONDILUTION] = PDOP; 
@@ -258,6 +294,10 @@ void handleGNSS(const tN2kMsg & N2kMsg) {
     webServerNode.setSensorData("navigation.gnss.differentialAge", ageOfCorrection);
 
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_GNSS_SATELLITES,nSatellites);
+    zenoh.publish(KEY_NAVIGATION_GNSS_GEOIDALSEPARATION, geoidalSeparation); 
+    zenoh.publish(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE, ageOfCorrection); 
+
     readings[KEY_NAVIGATION_GNSS_SATELLITES] = nSatellites; 
     readings[KEY_NAVIGATION_GNSS_GEOIDALSEPARATION] = geoidalSeparation; 
     readings[KEY_NAVIGATION_GNSS_DIFFERENTIALAGE] = ageOfCorrection; 
@@ -269,6 +309,11 @@ void handleGNSS(const tN2kMsg & N2kMsg) {
     webServerNode.setSensorData("navigation.position.longitude", longitude);
     
     //setup values for zenoh
+    zenoh.publish(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE, referenceSationID); 
+    zenoh.publish(KEY_NAVIGATION_POSITION_ALTITUDE, altitude); 
+    zenoh.publish(KEY_NAVIGATION_POSITION_LATITUDE, latitude); 
+    zenoh.publish(KEY_NAVIGATION_POSITION_LONGITUDE, longitude); 
+
     readings[KEY_NAVIGATION_GNSS_DIFFERENTIALAGE] = referenceSationID; 
     readings[KEY_NAVIGATION_POSITION_ALTITUDE] = altitude; 
     readings[KEY_NAVIGATION_POSITION_LATITUDE] = latitude; 
@@ -312,10 +357,10 @@ void setup()
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_PRESSURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WATER_TEMPERATURE);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_COURSEOVERGROUNDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE);
@@ -342,7 +387,7 @@ void setup()
     129025L, // Position
     129026L, // COG and SOG
     129029L, // GNSS
-    130306L, // Wind
+    //130306L, // Wind
     128275L, // log
     130310L, // Water temperature
     127245L, // Rudder
@@ -358,7 +403,7 @@ void setup()
     129025L, // Position
     129026L, // COG and SOG
     129029L, // GNSS
-    130306L, // Wind
+    //130306L, // Wind
     128275L, // log
     130310L, // Water temperature
     127245L, // Rudder
