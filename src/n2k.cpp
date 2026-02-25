@@ -312,7 +312,7 @@ void handleGNSS(const tN2kMsg &N2kMsg)
 
     webServerNode.setSensorData("navigation.gnss.differentialReference", referenceSationID);
     // snprintf(buf, sizeof(buf), "{\"altitude\":%f,\"latitude\":%f,\"longitude\":%f}", altitude , latitude, longitude);
-    webServerNode.setSensorData("navigation.position.altitude", 0.0);
+    webServerNode.setSensorData("navigation.position.altitude", altitude);
     webServerNode.setSensorData("navigation.position.latitude", latitude);
     webServerNode.setSensorData("navigation.position.longitude", longitude);
 
@@ -474,10 +474,10 @@ void loop()
   {
     n2kScheduler.UpdateNextTime();
    
-    webServerNode.setSensorData("navigation.gnss.differentialReference", random());
-    webServerNode.setSensorData("navigation.position.altitude", random());
-    webServerNode.setSensorData("navigation.position.latitude", random());
-    webServerNode.setSensorData("navigation.position.longitude", random());
+    // webServerNode.setSensorData("navigation.gnss.differentialReference", random());
+    // webServerNode.setSensorData("navigation.position.altitude", random());
+    // webServerNode.setSensorData("navigation.position.latitude", random());
+    // webServerNode.setSensorData("navigation.position.longitude", random());
     
   }
 
