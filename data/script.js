@@ -1,7 +1,8 @@
 // Get current sensor readings when the page loads  
 window.addEventListener('load', getReadings);
 
-var labelAws = document.getElementById('label-aws');
+var labelSignalK = document.getElementById('signalk-data');
+var labelZenoh = document.getElementById('zenoh-data');
 
 // Function to get current readings on the webpage when it loads for the first time
 function getReadings(){
@@ -10,13 +11,20 @@ function getReadings(){
     if (this.readyState == 4 && this.status == 200) {
       var myObj = JSON.parse(this.responseText);
       console.log(myObj);
-      var aws = myObj.aws;
-      labelAws.textContent = aws.toFixed(1);
+      updateHtml(myObj);
       
     }
   }; 
   xhr.open("GET", "/readings", true);
   xhr.send();
+}
+
+function updateHtml(myObj){
+  // var n2k = myObj.signalk;
+  //   var zenoh = myObj.zenoh;
+  //   labelN2k.textContent = n2k;
+  //   labelZenoh.textContent = zenoh;
+  labelSignalK.textContent = JSON.stringify(myObj,null,2);
 }
 
 if (!!window.EventSource) {
@@ -40,9 +48,6 @@ if (!!window.EventSource) {
     console.log("new_readings", e.data);
     var myObj = JSON.parse(e.data);
     console.log(myObj);
-    var aws = myObj.aws;
-    labelAws.textContent = aws.toFixed(1);
-  
-    
+    updateHtml(myObj);
   }, false);
 }

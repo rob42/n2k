@@ -317,12 +317,12 @@ void handleGNSS(const tN2kMsg &N2kMsg)
     webServerNode.setSensorData("navigation.position.longitude", longitude);
 
     // setup values for zenoh
-    zenoh.publish(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE, referenceSationID);
+    zenoh.publish(KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE, referenceSationID);
     zenoh.publish(KEY_NAVIGATION_POSITION_ALTITUDE, altitude);
     zenoh.publish(KEY_NAVIGATION_POSITION_LATITUDE, latitude);
     zenoh.publish(KEY_NAVIGATION_POSITION_LONGITUDE, longitude);
 
-    readings[KEY_NAVIGATION_GNSS_DIFFERENTIALAGE] = referenceSationID;
+    readings[KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE] = referenceSationID;
     readings[KEY_NAVIGATION_POSITION_ALTITUDE] = altitude;
     readings[KEY_NAVIGATION_POSITION_LATITUDE] = latitude;
     readings[KEY_NAVIGATION_POSITION_LONGITUDE] = longitude;
@@ -369,7 +369,7 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
   {
     readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(payload, NULL);
   }
-  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ))
+  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ))
   {
     readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = strtod(payload, NULL);
   }
@@ -473,10 +473,12 @@ void loop()
   if (n2kScheduler.IsTime())
   {
     n2kScheduler.UpdateNextTime();
-    // double angleRad = DegToRad(deAverageAwa());
-    // nmea2000Node.sendWind(angleRad, windNode.aws_ms, false);
-    //  update base with latest wind so Zenoh and webserver can publish it
-    // SetData(angleRad, windNode.aws_ms);
+   
+    webServerNode.setSensorData("navigation.gnss.differentialReference", random());
+    webServerNode.setSensorData("navigation.position.altitude", random());
+    webServerNode.setSensorData("navigation.position.latitude", random());
+    webServerNode.setSensorData("navigation.position.longitude", random());
+    
   }
 
   nmea2000Node.parseMessages();
