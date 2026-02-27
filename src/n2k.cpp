@@ -365,6 +365,7 @@ void handleNMEA2000Msg(const tN2kMsg &N2kMsg)
 void handleZenohWind(const char *topic, const char *payload, size_t len)
 {
   // what data is this?
+  syslog.debug.printf("Zenoh message: %s = %d", topic, strtod(payload, NULL));
   if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ))
   {
     readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(payload, NULL);
