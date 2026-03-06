@@ -149,6 +149,7 @@ void handleCOG_SOG(const tN2kMsg &N2kMsg)
 //*****************************************************************************
 void handleWind(const tN2kMsg &N2kMsg)
 {
+  syslog.debug.println("Handle n2k wind");
   unsigned char SID;
   tN2kWindReference windReference;
 
@@ -156,6 +157,7 @@ void handleWind(const tN2kMsg &N2kMsg)
 
   if (ParseN2kWindSpeed(N2kMsg, SID, windSpeed, windAngle, windReference))
   {
+    syslog.debug.printf("Handle n2k wind - parsed speed: %f, angle %f \n",windSpeed, windAngle);
     if( windReference == N2kWind_Apparent)
     {
       webServerNode.setSensorData("environment.wind.angleApparent", windAngle);
@@ -394,6 +396,16 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
   
 }
 
+// int seq = 1;
+void test(){
+  tN2kMsg N2kMsg;
+  SetN2kLatLonRapid(N2kMsg, -41.7034, 170.223);
+  handleNMEA2000Msg(N2kMsg);
+  // seq++;
+  // if (seq == 255) seq = 1;
+    
+}
+
 // *****************************************************************************
 void setup()
 {
@@ -474,7 +486,7 @@ void loop()
   if (n2kScheduler.IsTime())
   {
     n2kScheduler.UpdateNextTime();
-   
+   //test();
     // webServerNode.setSensorData("navigation.gnss.differentialReference", random());
     // webServerNode.setSensorData("navigation.position.altitude", random());
     // webServerNode.setSensorData("navigation.position.latitude", random());
