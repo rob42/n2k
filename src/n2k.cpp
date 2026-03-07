@@ -477,6 +477,7 @@ void setup()
   nmea2000Node.init();
   nmea2000Node.setOnOpen(OnN2kOpen);
   nmea2000Node.open();
+  
 }
 
 // *****************************************************************************
@@ -487,13 +488,13 @@ void loop()
   {
     n2kScheduler.UpdateNextTime();
    //test();
-    // webServerNode.setSensorData("navigation.gnss.differentialReference", random());
-    // webServerNode.setSensorData("navigation.position.altitude", random());
-    // webServerNode.setSensorData("navigation.position.latitude", random());
-    // webServerNode.setSensorData("navigation.position.longitude", random());
+   
+   JsonArray arr = JsonArray();
+   zenoh.getZenohPeers(arr);
     
   }
 
+  
   nmea2000Node.parseMessages();
   nmea2000Node.checkNodeAddress();
 

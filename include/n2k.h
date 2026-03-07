@@ -4,6 +4,7 @@
 #include <NMEA2000Node.h>
 #include <zenohBase.h>
 #include <signalk.h>
+#include <ArduinoJson.h>
 
 // remote syslog server for logs
 #define RSYSLOG_IP "cbr.local"
