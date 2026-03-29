@@ -494,10 +494,7 @@ void loop()
   if( (millis() - last)>1000){
     //JsonArray arr = JsonArray();
     //zenoh.getZenohPeers(arr);
-
-    zenoh.getPeerHostnames();
-    
-
+    //zenoh.getPeerHostnames();
     //getMDNShosts();
     last = millis();
   }
