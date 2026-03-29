@@ -410,9 +410,11 @@ void test(){
 void setup()
 {
   // Initialize base subsystems (WiFi, OTA, WebServer, Zenoh, Syslog)
-  ArduinoOTA.setHostname(NODENAME);
+  
+  
   syslog.app = NODENAME;
-  baseInit();
+  baseInit(NODENAME);
+  zenoh.setHostname(NODENAME);
   // zenoh key that is published.
   zenoh.declarePublisher(KEY_ENVIRONMENT_DEPTH_BELOWSURFACE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_DEPTH_BELOWTRANSDUCER);
@@ -480,21 +482,26 @@ void setup()
   
 }
 
+long last = millis();
 // *****************************************************************************
 void loop()
 {
 
-  if (n2kScheduler.IsTime())
-  {
-    n2kScheduler.UpdateNextTime();
+  // if (n2kScheduler.IsTime())
+  // {
+  //   n2kScheduler.UpdateNextTime();
    //test();
-   
-   JsonArray arr = JsonArray();
-   zenoh.getZenohPeers(arr);
+  if( (millis() - last)>1000){
+    //JsonArray arr = JsonArray();
+    //zenoh.getZenohPeers(arr);
+
+    zenoh.getPeerHostnames();
     
+
+    //getMDNShosts();
+    last = millis();
   }
 
-  
   nmea2000Node.parseMessages();
   nmea2000Node.checkNodeAddress();
 
