@@ -1,0 +1,17 @@
+#define KEY_ENVIRONMENT_WIND_SPEEDAPPARENTMAX  "environment/wind/speedApparentMax"
+
+   tok = strtok_r(ref, "/",&ref);
+         while (tok != NULL){
+            //first one
+            //syslog.debug.println(tok);
+            prevTok = tok;
+           // if(!tmp.isNull()) {
+                prev = tmp;
+                if(tmp[tok].is<JsonObject>()){
+                    tmp = tmp[tok];
+                }else{
+                    tmp = tmp[tok].to<JsonObject>();
+                }
+                
+           // }
+            tok = strtok_r(NULL, "/",&ref);
