@@ -296,22 +296,25 @@ void handleNMEA2000Msg(const tN2kMsg &N2kMsg)
 void handleZenohWind(const char *topic, const char *payload, size_t len)
 {
   // what data is this?
-  syslog.debug.printf("Zenoh message: %s = %d", topic, strtod(payload, NULL));
+  char value[len+1] {'\0'};
+  strncpy(value,payload,len);
+  syslog.debug.printf("Zenoh message: %s = %d\n", topic, strtod(value, NULL));
+  syslog.debug.printf("Zenoh message payload: %.*s\n", len, payload);
   if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ))
   {
-    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(payload, NULL);
+    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(value, NULL);
   }
   if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ))
   {
-    readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = strtod(payload, NULL);
+    readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = strtod(value, NULL);
   }
   if( strcmp(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND , topic ))
   {
-    readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND] = strtod(payload, NULL);
+    readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND] = strtod(value, NULL);
   }
   if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDTRUE , topic ))
   {
-    readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = strtod(payload, NULL);
+    readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = strtod(value, NULL);
   }
 
   //have we got data?
@@ -344,6 +347,10 @@ void setup()
   syslog.app = NODENAME;
   baseInit(NODENAME);
   zenoh.setHostname(NODENAME);
+
+  pinMode(LED_BLUE, OUTPUT);
+  digitalWrite(LED_BLUE, LOW);
+
   // zenoh key that is published.
   zenoh.declarePublisher(KEY_ENVIRONMENT_DEPTH_BELOWSURFACE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_DEPTH_BELOWTRANSDUCER);
@@ -412,6 +419,7 @@ void setup()
 }
 
 long last = millis();
+bool blink = LOW;
 // *****************************************************************************
 void loop()
 {
@@ -421,11 +429,14 @@ void loop()
   //   n2kScheduler.UpdateNextTime();
    //test();
   if( (millis() - last)>1000){
+    
     //JsonArray arr = JsonArray();
     //zenoh.getZenohPeers(arr);
-    //zenoh.getPeerHostnames();
+    zenoh.getPeerHostnames();
     //getMDNShosts();
     last = millis();
+    blink=!blink;
+    digitalWrite(LED_BLUE, blink);
   }
 
   nmea2000Node.parseMessages();
