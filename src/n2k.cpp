@@ -39,7 +39,7 @@ void OnN2kOpen()
 }
 
 void setData(char* key, double value){
-  webServerNode.setSensorData(key, (int)value);
+  webServerNode.setSensorData(key, value);
   zenoh.publish(key, value);
   readings[key] = value;
 }
@@ -298,32 +298,33 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
   // what data is this?
   char value[len+1] {'\0'};
   strncpy(value,payload,len);
-  syslog.debug.printf("Zenoh message: %s = %d\n", topic, strtod(value, NULL));
+  syslog.debug.printf("Zenoh message: %s = %s\n", topic, value);
   syslog.debug.printf("Zenoh message payload: %.*s\n", len, payload);
-  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ))
+  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ) == 0)
   {
-    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(value, NULL);
+    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(value,NULL);
+    //syslog.printf("    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = %f\n",readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>());
   }
-  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ))
+  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ) == 0)
   {
-    readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = strtod(value, NULL);
+    readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = strtod(value,NULL);
   }
-  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND , topic ))
+  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND , topic ) == 0)
   {
-    readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND] = strtod(value, NULL);
+    readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND] = strtod(value,NULL);
   }
-  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDTRUE , topic ))
+  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDTRUE , topic ) == 0)
   {
-    readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = strtod(value, NULL);
+    readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = strtod(value,NULL);
   }
 
   //have we got data?
-  if(!readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].isNull() && !readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].isNull()){
-    nmea2000Node.sendWindApparent(readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT], readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT], false);
+  if(!readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].isNull()){
+    nmea2000Node.sendWindApparent(readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>(), readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].as<double>(), false);
   }
 
   if(!readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE].isNull()){
-    nmea2000Node.sendWindTrue(readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND], readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE], false);
+    nmea2000Node.sendWindTrue(readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND].as<double>(), readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE].as<double>(), false);
   }
   
 }
@@ -358,10 +359,10 @@ void setup()
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WATER_TEMPERATURE);
   // zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
   // zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_COURSEOVERGROUNDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE);

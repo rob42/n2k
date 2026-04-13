@@ -7,7 +7,8 @@
 #include <ArduinoJson.h>
 
 // remote syslog server for logs
-#define RSYSLOG_IP "cbr.local"
+//#define RSYSLOG_IP "cbr.local"
+#define RSYSLOG_IP ""
 //zenoh
 
 // Peer mode values (comment/uncomment as needed)
