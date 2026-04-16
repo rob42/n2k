@@ -346,7 +346,7 @@ void setup()
   
   
   syslog.app = NODENAME;
-  baseInit(NODENAME);
+  baseInit(NODENAME, RSYSLOG_IP, PicoSyslog::LogLevel::debug );
   zenoh.setHostname(NODENAME);
 
   pinMode(LED_BLUE, OUTPUT);
