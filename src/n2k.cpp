@@ -60,7 +60,21 @@ void handleHeading(const tN2kMsg &N2kMsg)
 
   if (ParseN2kHeading(N2kMsg, SID, heading, deviation, variation, ref))
   {
-    setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading + variation + deviation);
+     //value is in degrees 0-360?
+    //if(variation>360 || variation < -360) variation = 0; //can be -1000000000!!
+
+   /// syslog.debug.printf("Heading: %f, variation: %f, deviation: %f\n",heading,variation, deviation);
+
+    if(ref == tN2kHeadingReference::N2khr_true) {
+      // true heading
+      setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading );
+    } else if(ref == tN2kHeadingReference::N2khr_magnetic) {
+      // mag heading
+      setDatafromN2k(KEY_NAVIGATION_HEADINGMAGNETIC, heading );
+    }
+   
+    
+    
   }
 }
 
@@ -271,7 +285,7 @@ void handleGNSS(const tN2kMsg &N2kMsg)
 //
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg)
 {
-  syslog.debug.printf("N2K message received: %f\n", N2kMsg.PGN);
+  syslog.debug.printf("N2K message received: %d\n", N2kMsg.PGN);
   switch (N2kMsg.PGN)
   {
   case 127250L:
@@ -383,11 +397,11 @@ void setup()
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_PRESSURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WATER_TEMPERATURE);
-  // zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
-  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
-  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
-  // zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
-  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
+  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
+  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
+  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
+  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
+  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_COURSEOVERGROUNDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE);
@@ -397,6 +411,7 @@ void setup()
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_SATELLITES);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_TYPE);
   zenoh.declarePublisher(KEY_NAVIGATION_HEADINGTRUE);
+  zenoh.declarePublisher(KEY_NAVIGATION_HEADINGMAGNETIC);
   zenoh.declarePublisher(KEY_NAVIGATION_LOG);
   zenoh.declarePublisher(KEY_NAVIGATION_POSITION_ALTITUDE);
   zenoh.declarePublisher(KEY_NAVIGATION_POSITION_LATITUDE);
