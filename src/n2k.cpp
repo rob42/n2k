@@ -38,9 +38,14 @@ void OnN2kOpen()
   n2kScheduler.UpdateNextTime();
 }
 
-void setData(char* key, double value){
+void setDatafromN2k(const char* key, double value){
   webServerNode.setSensorData(key, value);
   zenoh.publish(key, value);
+  readings[key] = value;
+}
+
+void setDatafromZenoh(const char* key, double value){
+  webServerNode.setSensorData(key, value);
   readings[key] = value;
 }
 
@@ -55,7 +60,7 @@ void handleHeading(const tN2kMsg &N2kMsg)
 
   if (ParseN2kHeading(N2kMsg, SID, heading, deviation, variation, ref))
   {
-    setData(KEY_NAVIGATION_HEADINGTRUE, heading + variation + deviation);
+    setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading + variation + deviation);
   }
 }
 
@@ -69,8 +74,8 @@ void handleBoatSpeed(const tN2kMsg &N2kMsg)
 
   if (ParseN2kBoatSpeed(N2kMsg, SID, waterReferenced, groundReferenced, SWRT))
   {
-    setData(KEY_NAVIGATION_SPEEDTHROUGHWATER, waterReferenced);
-    setData(KEY_NAVIGATION_SPEEDOVERGROUND, groundReferenced);
+    setDatafromN2k(KEY_NAVIGATION_SPEEDTHROUGHWATER, waterReferenced);
+    setDatafromN2k(KEY_NAVIGATION_SPEEDOVERGROUND, groundReferenced);
   }
 }
 
@@ -86,8 +91,8 @@ void handleDepth(const tN2kMsg &N2kMsg)
   if (ParseN2kWaterDepth(N2kMsg, SID, depthBelowTransducer, offset, range))
   {
     waterDepth = depthBelowTransducer + offset;
-    setData(KEY_ENVIRONMENT_DEPTH_BELOWTRANSDUCER, depthBelowTransducer);
-    setData(KEY_ENVIRONMENT_DEPTH_BELOWSURFACE, waterDepth);
+    setDatafromN2k(KEY_ENVIRONMENT_DEPTH_BELOWTRANSDUCER, depthBelowTransducer);
+    setDatafromN2k(KEY_ENVIRONMENT_DEPTH_BELOWSURFACE, waterDepth);
   }
 }
 
@@ -101,9 +106,9 @@ void handlePosition(const tN2kMsg &N2kMsg)
   if (ParseN2kPGN129025(N2kMsg, latitude, longitude))
   {
    
-    setData(KEY_NAVIGATION_POSITION_ALTITUDE, 0.0);
-    setData(KEY_NAVIGATION_POSITION_LATITUDE, latitude);
-    setData(KEY_NAVIGATION_POSITION_LONGITUDE, longitude);
+    setDatafromN2k(KEY_NAVIGATION_POSITION_ALTITUDE, 0.0);
+    setDatafromN2k(KEY_NAVIGATION_POSITION_LATITUDE, latitude);
+    setDatafromN2k(KEY_NAVIGATION_POSITION_LONGITUDE, longitude);
   }
 }
 
@@ -118,8 +123,8 @@ void handleCOG_SOG(const tN2kMsg &N2kMsg)
   if (ParseN2kPGN129026(N2kMsg, SID, ref, cog, sog))
   {
   
-    setData(KEY_NAVIGATION_COURSEOVERGROUNDTRUE, cog);
-    setData(KEY_NAVIGATION_SPEEDOVERGROUND, sog);
+    setDatafromN2k(KEY_NAVIGATION_COURSEOVERGROUNDTRUE, cog);
+    setDatafromN2k(KEY_NAVIGATION_SPEEDOVERGROUND, sog);
 
   }
 }
@@ -139,22 +144,22 @@ void handleWind(const tN2kMsg &N2kMsg)
     if( windReference == N2kWind_Apparent)
     {
    
-      setData(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT, windAngle);
-      setData(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT, windSpeed);
+      setDatafromN2k(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT, windAngle);
+      setDatafromN2k(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT, windSpeed);
 
     }
     else if( windReference == N2kWind_True_boat)
     {
     
-      setData(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND, windAngle);
-      setData(KEY_ENVIRONMENT_WIND_SPEEDTRUE, windSpeed);
+      setDatafromN2k(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND, windAngle);
+      setDatafromN2k(KEY_ENVIRONMENT_WIND_SPEEDTRUE, windSpeed);
 
     }
     else if( windReference == N2kWind_True_water)
     {
     
-      setData(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER, windAngle);
-      setData(KEY_ENVIRONMENT_WIND_SPEEDTRUE, windSpeed);
+      setDatafromN2k(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER, windAngle);
+      setDatafromN2k(KEY_ENVIRONMENT_WIND_SPEEDTRUE, windSpeed);
 
     }
   }
@@ -172,8 +177,8 @@ void handleLog(const tN2kMsg &N2kMsg)
   if (ParseN2kDistanceLog(N2kMsg, daysSince1970, secondsSinceMidnight, log, triplog))
   {
    
-    setData(KEY_NAVIGATION_TRIP_LOG, (int)triplog);
-    setData(KEY_NAVIGATION_LOG, (int)log);
+    setDatafromN2k(KEY_NAVIGATION_TRIP_LOG, (int)triplog);
+    setDatafromN2k(KEY_NAVIGATION_LOG, (int)log);
 
   }
 }
@@ -190,9 +195,9 @@ void handleWaterTemp(const tN2kMsg &N2kMsg)
   if (ParseN2kPGN130310(N2kMsg, SID, waterTemperature, outsideAmbientAirTemperature, atmosphericPressure))
   {
   
-    setData(KEY_ENVIRONMENT_WATER_TEMPERATURE, waterTemperature);
-    setData(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE, outsideAmbientAirTemperature);
-    setData(KEY_ENVIRONMENT_OUTSIDE_PRESSURE, atmosphericPressure);
+    setDatafromN2k(KEY_ENVIRONMENT_WATER_TEMPERATURE, waterTemperature);
+    setDatafromN2k(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE, outsideAmbientAirTemperature);
+    setDatafromN2k(KEY_ENVIRONMENT_OUTSIDE_PRESSURE, atmosphericPressure);
 
   }
 }
@@ -209,7 +214,7 @@ void handleRudder(const tN2kMsg &N2kMsg)
   if (ParseN2kRudder(N2kMsg, rudderPosition, instance, rudderDirectionOrder, angleOrder))
   {
   
-    setData(KEY_STEERING_RUDDERANGLE, rudderPosition);
+    setDatafromN2k(KEY_STEERING_RUDDERANGLE, rudderPosition);
    
   }
 }
@@ -242,20 +247,20 @@ void handleGNSS(const tN2kMsg &N2kMsg)
   {
 
   
-    setData(KEY_NAVIGATION_GNSS_TYPE, GNSStype);
-    setData(KEY_NAVIGATION_GNSS_HORIZONTALDILUTION, HDOP);
-    setData(KEY_NAVIGATION_GNSS_POSITIONDILUTION, PDOP);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_TYPE, GNSStype);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_HORIZONTALDILUTION, HDOP);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_POSITIONDILUTION, PDOP);
 
    
-    setData(KEY_NAVIGATION_GNSS_SATELLITES, nSatellites);
-    setData(KEY_NAVIGATION_GNSS_GEOIDALSEPARATION, geoidalSeparation);
-    setData(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE, ageOfCorrection);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_SATELLITES, nSatellites);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_GEOIDALSEPARATION, geoidalSeparation);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE, ageOfCorrection);
 
     
-    setData(KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE, referenceSationID);
-    setData(KEY_NAVIGATION_POSITION_ALTITUDE, altitude);
-    setData(KEY_NAVIGATION_POSITION_LATITUDE, latitude);
-    setData(KEY_NAVIGATION_POSITION_LONGITUDE, longitude);
+    setDatafromN2k(KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE, referenceSationID);
+    setDatafromN2k(KEY_NAVIGATION_POSITION_ALTITUDE, altitude);
+    setDatafromN2k(KEY_NAVIGATION_POSITION_LATITUDE, latitude);
+    setDatafromN2k(KEY_NAVIGATION_POSITION_LONGITUDE, longitude);
 
   }
 }
@@ -266,7 +271,7 @@ void handleGNSS(const tN2kMsg &N2kMsg)
 //
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg)
 {
-
+  syslog.debug.printf("N2K message received: %f\n", N2kMsg.PGN);
   switch (N2kMsg.PGN)
   {
   case 127250L:
@@ -300,27 +305,21 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
   strncpy(value,payload,len);
   syslog.debug.printf("Zenoh message: %s = %s\n", topic, value);
   syslog.debug.printf("Zenoh message payload: %.*s\n", len, payload);
-  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ) == 0)
+  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ) == 0
+      || strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ) == 0 
+      || strcmp(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND , topic ) == 0
+      || strcmp(KEY_ENVIRONMENT_WIND_SPEEDTRUE , topic ) == 0)
+
   {
-    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = strtod(value,NULL);
-    //syslog.printf("    readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT] = %f\n",readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>());
-  }
-  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ) == 0)
-  {
-    readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT] = strtod(value,NULL);
-  }
-  if( strcmp(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND , topic ) == 0)
-  {
-    readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND] = strtod(value,NULL);
-  }
-  if( strcmp(KEY_ENVIRONMENT_WIND_SPEEDTRUE , topic ) == 0)
-  {
-    readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE] = strtod(value,NULL);
+    setDatafromZenoh(topic,strtod(value,NULL));
   }
 
   //have we got data?
   if(!readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].isNull()){
-    nmea2000Node.sendWindApparent(readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>(), readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].as<double>(), false);
+    double angle = readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>();
+    double speed = readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].as<double>();
+    syslog.debug.printf("Sending windapparent, angle = %f, speed = %f \n",angle,speed);
+    nmea2000Node.sendWindApparent(angle,speed , false);
   }
 
   if(!readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE].isNull()){
@@ -339,6 +338,32 @@ void test(){
     
 }
 
+const unsigned long  receiveMessages[] = {
+      127250L, // Heading
+      128259L, // Boat speed
+      128267L, // Depth
+      129025L, // Position
+      129026L, // COG and SOG
+      129029L, // GNSS
+      // 130306L, // Wind
+      128275L, // log
+      130310L, // Water temperature
+      127245L, // Rudder
+      0};
+
+const unsigned long  transmitMessages[] = {
+      // 127250L, // Heading
+      // 128259L, // Boat speed
+      // 128267L, // Depth
+      // 129025L, // Position
+      // 129026L, // COG and SOG
+      // 129029L, // GNSS
+      130306L, // Wind
+      // 128275L, // log
+      // 130310L, // Water temperature
+      // 127245L, // Rudder
+      0};
+  
 // *****************************************************************************
 void setup()
 {
@@ -381,34 +406,12 @@ void setup()
   zenoh.declarePublisher(KEY_NAVIGATION_TRIP_LOG);
   zenoh.declarePublisher(KEY_STEERING_RUDDERANGLE);
 
-  const long unsigned receiveMessages[] = {
-      127250L, // Heading
-      128259L, // Boat speed
-      128267L, // Depth
-      129025L, // Position
-      129026L, // COG and SOG
-      129029L, // GNSS
-      // 130306L, // Wind
-      128275L, // log
-      130310L, // Water temperature
-      127245L, // Rudder
-      0};
-  nmea2000Node.setReceiveMessages(receiveMessages);
+  
+  nmea2000Node.setReceiveMessages(receiveMessages, 10);
   nmea2000Node.setReceiveMsgHandler(handleNMEA2000Msg);
 
-  const long unsigned transmitMessages[] = {
-      // 127250L, // Heading
-      // 128259L, // Boat speed
-      // 128267L, // Depth
-      // 129025L, // Position
-      // 129026L, // COG and SOG
-      // 129029L, // GNSS
-      130306L, // Wind
-      // 128275L, // log
-      // 130310L, // Water temperature
-      // 127245L, // Rudder
-      0};
-  nmea2000Node.setTransmitMessages(transmitMessages);
+  
+  nmea2000Node.setTransmitMessages(transmitMessages, 2);
   zenoh.subscribe(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT, handleZenohWind);
   zenoh.subscribe(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT, handleZenohWind);
   zenoh.subscribe(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND, handleZenohWind);
@@ -438,6 +441,7 @@ void loop()
     last = millis();
     blink=!blink;
     digitalWrite(LED_BLUE, blink);
+    
   }
 
   nmea2000Node.parseMessages();
