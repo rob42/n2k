@@ -5,12 +5,14 @@
 #include <zenohBase.h>
 #include <signalk.h>
 #include <ArduinoJson.h>
+#include <WMM_Tinier.h>
 
 // remote syslog server for logs
 #ifdef RSYSLOG_IP
 #undef RSYSLOG_IP
 #endif
-#define RSYSLOG_IP "cbr.local"
+//#define RSYSLOG_IP "cbr.local"
+#define RSYSLOG_IP ""
 //zenoh
 
 // Peer mode values (comment/uncomment as needed)

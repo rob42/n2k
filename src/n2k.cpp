@@ -28,6 +28,8 @@ NMEA2000Node nmea2000Node;
 // Define schedulers for messages. They are declared in base but keep local reference for clarity.
 tN2kSyncScheduler n2kScheduler(false, 100, 500);
 
+WMM_Tinier declination;
+
 // *****************************************************************************
 // Call back for NMEA2000 open. This will be called, when library starts bus communication.
 // See NMEA2000.SetOnOpen(OnN2kOpen); on setup()
@@ -68,9 +70,17 @@ void handleHeading(const tN2kMsg &N2kMsg)
     if(ref == tN2kHeadingReference::N2khr_true) {
       // true heading
       setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading );
+      if(!readings[KEY_NAVIGATION_MAGNETICDEVIATION].isNull()){
+        double decl = readings[KEY_NAVIGATION_MAGNETICDEVIATION].as<double>();
+        setDatafromN2k(KEY_NAVIGATION_HEADINGMAGNETIC, heading + decl);
+      }
     } else if(ref == tN2kHeadingReference::N2khr_magnetic) {
       // mag heading
       setDatafromN2k(KEY_NAVIGATION_HEADINGMAGNETIC, heading );
+      if(!readings[KEY_NAVIGATION_MAGNETICDEVIATION].isNull()){
+        double decl = readings[KEY_NAVIGATION_MAGNETICDEVIATION].as<double>();
+        setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading - decl);
+      }
     }
    
     
@@ -234,6 +244,19 @@ void handleRudder(const tN2kMsg &N2kMsg)
 }
 
 //*****************************************************************************
+// void handleDeclination(const tN2kMsg &N2kMsg)
+// {
+//   uint16_t daysSince1970;
+//   double variation;
+//   tN2kMagneticVariation source;
+//   unsigned char SID;
+//   if(ParseN2kMagneticVariation(N2kMsg, SID, source, daysSince1970, variation))
+//   {
+//     setDatafromN2k(KEY_NAVIGATION_MAGNETICDEVIATION, variation);
+//   }
+
+// }
+//*****************************************************************************
 void handleGNSS(const tN2kMsg &N2kMsg)
 {
 
@@ -308,6 +331,8 @@ void handleNMEA2000Msg(const tN2kMsg &N2kMsg)
     handleWaterTemp(N2kMsg);
   case 127245L:
     handleRudder(N2kMsg);
+  // case 127258L:
+  //   handleDeclination(N2kMsg);
   }
 }
 
@@ -363,6 +388,7 @@ const unsigned long  receiveMessages[] = {
       128275L, // log
       130310L, // Water temperature
       127245L, // Rudder
+      //127258L,
       0};
 
 const unsigned long  transmitMessages[] = {
@@ -376,6 +402,7 @@ const unsigned long  transmitMessages[] = {
       // 128275L, // log
       // 130310L, // Water temperature
       // 127245L, // Rudder
+      // 127258L, // Declination
       0};
   
 // *****************************************************************************
@@ -390,6 +417,8 @@ void setup()
 
   pinMode(LED_BLUE, OUTPUT);
   digitalWrite(LED_BLUE, LOW);
+
+  declination.begin();
 
   // zenoh key that is published.
   zenoh.declarePublisher(KEY_ENVIRONMENT_DEPTH_BELOWSURFACE);
@@ -412,6 +441,7 @@ void setup()
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_TYPE);
   zenoh.declarePublisher(KEY_NAVIGATION_HEADINGTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_HEADINGMAGNETIC);
+  zenoh.declarePublisher(KEY_NAVIGATION_MAGNETICDEVIATION);
   zenoh.declarePublisher(KEY_NAVIGATION_LOG);
   zenoh.declarePublisher(KEY_NAVIGATION_POSITION_ALTITUDE);
   zenoh.declarePublisher(KEY_NAVIGATION_POSITION_LATITUDE);
@@ -437,7 +467,23 @@ void setup()
   
 }
 
+void publishDeclination(){
+   if(!readings[KEY_NAVIGATION_POSITION_LATITUDE].isNull() 
+      && !readings[KEY_NAVIGATION_POSITION_LONGITUDE].isNull()){
+
+    float lat = readings[KEY_NAVIGATION_POSITION_LATITUDE].as<float>();
+    float lon = readings[KEY_NAVIGATION_POSITION_LONGITUDE].as<float>();
+    uint8_t day = rtc.getDay();
+    uint8_t month = rtc.getMonth();
+    uint8_t year = rtc.getYear()-2000; //just need last two digits
+    float decl = declination.magneticDeclination(lat, lon, year, month, day); //in degrees
+    decl = decl * (PI / 180); //radians
+    setDatafromN2k(KEY_NAVIGATION_MAGNETICDEVIATION,decl);
+    }
+  }
+
 long last = millis();
+long declLast = 0;
 bool blink = LOW;
 // *****************************************************************************
 void loop()
@@ -456,8 +502,14 @@ void loop()
     last = millis();
     blink=!blink;
     digitalWrite(LED_BLUE, blink);
-    
+    publishDeclination();
   }
+  //every 5 minutes
+  if( (millis() - declLast)>300000){
+    publishDeclination();
+    declLast=millis();
+  }
+  
 
   nmea2000Node.parseMessages();
   nmea2000Node.checkNodeAddress();
