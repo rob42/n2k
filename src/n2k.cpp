@@ -495,14 +495,11 @@ void loop()
    //test();
   if( (millis() - last)>1000){
     
-    //JsonArray arr = JsonArray();
-    //zenoh.getZenohPeers(arr);
-    zenoh.getPeerHostnames();
-    //getMDNShosts();
+    
     last = millis();
     blink=!blink;
     digitalWrite(LED_BLUE, blink);
-    publishDeclination();
+    
   }
   //every 5 minutes
   if( (millis() - declLast)>300000){
