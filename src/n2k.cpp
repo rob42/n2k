@@ -156,7 +156,7 @@ void handleCOG_SOG(const tN2kMsg &N2kMsg)
 //*****************************************************************************
 void handleWind(const tN2kMsg &N2kMsg)
 {
-  syslog.debug.println("Handle n2k wind");
+  //syslog.debug.println("Handle n2k wind");
   unsigned char SID;
   tN2kWindReference windReference;
 
@@ -164,7 +164,7 @@ void handleWind(const tN2kMsg &N2kMsg)
 
   if (ParseN2kWindSpeed(N2kMsg, SID, windSpeed, windAngle, windReference))
   {
-    syslog.debug.printf("Handle n2k wind - parsed speed: %f, angle %f \n",windSpeed, windAngle);
+    //syslog.debug.printf("Handle n2k wind - parsed speed: %f, angle %f \n",windSpeed, windAngle);
     if( windReference == N2kWind_Apparent)
     {
    
@@ -308,7 +308,7 @@ void handleGNSS(const tN2kMsg &N2kMsg)
 //
 void handleNMEA2000Msg(const tN2kMsg &N2kMsg)
 {
-  syslog.debug.printf("N2K message received: %d\n", N2kMsg.PGN);
+  //syslog.debug.printf("N2K message received: %d\n", N2kMsg.PGN);
   switch (N2kMsg.PGN)
   {
   case 127250L:
@@ -342,8 +342,8 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
   // what data is this?
   char value[len+1] {'\0'};
   strncpy(value,payload,len);
-  syslog.debug.printf("Zenoh message: %s = %s\n", topic, value);
-  syslog.debug.printf("Zenoh message payload: %.*s\n", len, payload);
+  //syslog.debug.printf("Zenoh message: %s = %s\n", topic, value);
+  //syslog.debug.printf("Zenoh message payload: %.*s\n", len, payload);
   if( strcmp(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT , topic ) == 0
       || strcmp(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT , topic ) == 0 
       || strcmp(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND , topic ) == 0
@@ -357,7 +357,7 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
   if(!readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].isNull()){
     double angle = readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>();
     double speed = readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].as<double>();
-    syslog.debug.printf("Sending windapparent, angle = %f, speed = %f \n",angle,speed);
+   // syslog.debug.printf("Sending windapparent, angle = %f, speed = %f \n",angle,speed);
     nmea2000Node.sendWindApparent(angle,speed , false);
   }
 

@@ -11,8 +11,8 @@
 #ifdef RSYSLOG_IP
 #undef RSYSLOG_IP
 #endif
-//#define RSYSLOG_IP "cbr.local"
-#define RSYSLOG_IP ""
+#define RSYSLOG_IP "cbr.local"
+//#define RSYSLOG_IP ""
 //zenoh
 
 // Peer mode values (comment/uncomment as needed)
