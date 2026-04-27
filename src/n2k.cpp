@@ -40,15 +40,17 @@ void OnN2kOpen()
   n2kScheduler.UpdateNextTime();
 }
 
-void setDatafromN2k(const char* key, double value){
+
+void setDatafromZenoh(const char* key, double value, unsigned long millis){
   webServerNode.setSensorData(key, value);
-  zenoh.publish(key, value);
-  readings[key] = value;
+  readings[key][KEY_VALUE] = value;
+  readings[key][KEY_TIMEOUT] = millis;
 }
 
-void setDatafromZenoh(const char* key, double value){
-  webServerNode.setSensorData(key, value);
-  readings[key] = value;
+
+void setDatafromN2k(const char* key, double value){
+  setDatafromZenoh(key,value,millis());
+  zenoh.publish(key, value);
 }
 
 //*****************************************************************************
@@ -71,14 +73,14 @@ void handleHeading(const tN2kMsg &N2kMsg)
       // true heading
       setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading );
       if(!readings[KEY_NAVIGATION_MAGNETICDEVIATION].isNull()){
-        double decl = readings[KEY_NAVIGATION_MAGNETICDEVIATION].as<double>();
+        double decl = readings[KEY_NAVIGATION_MAGNETICDEVIATION][KEY_VALUE].as<double>();
         setDatafromN2k(KEY_NAVIGATION_HEADINGMAGNETIC, heading + decl);
       }
     } else if(ref == tN2kHeadingReference::N2khr_magnetic) {
       // mag heading
       setDatafromN2k(KEY_NAVIGATION_HEADINGMAGNETIC, heading );
       if(!readings[KEY_NAVIGATION_MAGNETICDEVIATION].isNull()){
-        double decl = readings[KEY_NAVIGATION_MAGNETICDEVIATION].as<double>();
+        double decl = readings[KEY_NAVIGATION_MAGNETICDEVIATION][KEY_VALUE].as<double>();
         setDatafromN2k(KEY_NAVIGATION_HEADINGTRUE, heading - decl);
       }
     }
@@ -350,19 +352,19 @@ void handleZenohWind(const char *topic, const char *payload, size_t len)
       || strcmp(KEY_ENVIRONMENT_WIND_SPEEDTRUE , topic ) == 0)
 
   {
-    setDatafromZenoh(topic,strtod(value,NULL));
+    setDatafromZenoh(topic,strtod(value,NULL), millis());
   }
 
   //have we got data?
   if(!readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].isNull()){
-    double angle = readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT].as<double>();
-    double speed = readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT].as<double>();
+    double angle = readings[KEY_ENVIRONMENT_WIND_ANGLEAPPARENT][KEY_VALUE].as<double>();
+    double speed = readings[KEY_ENVIRONMENT_WIND_SPEEDAPPARENT][KEY_VALUE].as<double>();
    // syslog.debug.printf("Sending windapparent, angle = %f, speed = %f \n",angle,speed);
     nmea2000Node.sendWindApparent(angle,speed , false);
   }
 
   if(!readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND].isNull() && !readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE].isNull()){
-    nmea2000Node.sendWindTrue(readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND].as<double>(), readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE].as<double>(), false);
+    nmea2000Node.sendWindTrue(readings[KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND][KEY_VALUE].as<double>(), readings[KEY_ENVIRONMENT_WIND_SPEEDTRUE][KEY_VALUE].as<double>(), false);
   }
   
 }
@@ -471,8 +473,8 @@ void publishDeclination(){
    if(!readings[KEY_NAVIGATION_POSITION_LATITUDE].isNull() 
       && !readings[KEY_NAVIGATION_POSITION_LONGITUDE].isNull()){
 
-    float lat = readings[KEY_NAVIGATION_POSITION_LATITUDE].as<float>();
-    float lon = readings[KEY_NAVIGATION_POSITION_LONGITUDE].as<float>();
+    float lat = readings[KEY_NAVIGATION_POSITION_LATITUDE][KEY_VALUE].as<float>();
+    float lon = readings[KEY_NAVIGATION_POSITION_LONGITUDE][KEY_VALUE].as<float>();
     uint8_t day = rtc.getDay();
     uint8_t month = rtc.getMonth();
     uint8_t year = rtc.getYear()-2000; //just need last two digits
