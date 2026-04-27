@@ -42,9 +42,12 @@ void OnN2kOpen()
 
 
 void setDatafromZenoh(const char* key, double value, unsigned long millis){
+
   webServerNode.setSensorData(key, value);
+ 
   readings[key][KEY_VALUE] = value;
   readings[key][KEY_TIMEOUT] = millis;
+ 
 }
 
 
