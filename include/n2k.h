@@ -11,7 +11,8 @@
 #ifdef RSYSLOG_IP
 #undef RSYSLOG_IP
 #endif
-#define RSYSLOG_IP "cbr.local"
+//#define RSYSLOG_IP "cbr.local"
+#define RSYSLOG_IP "192.168.1.125"
 //#define RSYSLOG_IP ""
 //zenoh
 
