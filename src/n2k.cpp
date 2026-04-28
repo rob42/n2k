@@ -431,11 +431,11 @@ void setup()
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_PRESSURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_OUTSIDE_TEMPERATURE);
   zenoh.declarePublisher(KEY_ENVIRONMENT_WATER_TEMPERATURE);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
-  zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLEAPPARENT);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEGROUND);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_ANGLETRUEWATER);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDAPPARENT);
+  //zenoh.declarePublisher(KEY_ENVIRONMENT_WIND_SPEEDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_COURSEOVERGROUNDTRUE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALAGE);
   zenoh.declarePublisher(KEY_NAVIGATION_GNSS_DIFFERENTIALREFERENCE);
